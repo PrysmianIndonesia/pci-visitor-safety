@@ -68,6 +68,13 @@
   .section-head p { color: var(--text-secondary); font-size: 13.5px; margin-top: 6px; max-width: 540px; margin-left: auto; margin-right: auto; }
 
   /* ---------- PPE checklist ---------- */
+  /* ---------- induction video ---------- */
+  .video-card {
+    background: #0b0f14; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
+    border: 1px solid var(--border); max-width: 720px; margin: 0 auto;
+  }
+  .video-card video { display: block; width: 100%; height: auto; max-height: 420px; background: #0b0f14; }
+
   .ppe-row {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;
   }
@@ -132,6 +139,7 @@
   :root[data-theme="dark"] .map-panel-level.serious { color: var(--serious); }
   :root[data-theme="dark"] .map-panel-level.critical { color: var(--critical); }
   :root[data-theme="dark"] .map-panel-level.good { color: var(--good); }
+  .map-panel-reason { font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 14px; }
   .map-panel-focus { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
   .map-panel-family { font-weight: 700; font-size: 14.5px; margin-bottom: 12px; }
   .map-panel-tip { font-size: 13px; color: var(--text-secondary); line-height: 1.6; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
@@ -191,6 +199,19 @@
     <h1>Welcome to the Plant Floor</h1>
     <p>Before you walk the production floor, take a minute to see which areas need extra caution and what to keep in mind as you move through the site.</p>
   </div>
+
+  <section>
+    <div class="section-head">
+      <h2>Watch: Official Safety Induction</h2>
+      <p>A short video from PT Prysmian Cables Indonesia — please watch before heading to the plant floor.</p>
+    </div>
+    <div class="video-card">
+      <video controls preload="metadata" poster="video/poster.jpg" playsinline>
+        <source src="video/safety_induction.mp4" type="video/mp4">
+        Your browser does not support embedded video. You can still view the map and safety guide below.
+      </video>
+    </div>
+  </section>
 
   <section>
     <div class="section-head">
@@ -321,7 +342,7 @@
     ],
     "total": 15,
     "top_family": "Machinery, Equipment and Hazardous Energy",
-    "level": "warning"
+    "level": "critical"
   },
   "Armouring": {
     "label": "Armouring (AR1 Taping / AR2 Line)",
@@ -341,7 +362,7 @@
     ],
     "total": 16,
     "top_family": "Machinery, Equipment and Hazardous Energy",
-    "level": "warning"
+    "level": "critical"
   },
   "Rewinding": {
     "label": "Rewinding (RL1 / RL2 Taping)",
@@ -355,7 +376,7 @@
     ],
     "total": 13,
     "top_family": "Machinery, Equipment and Hazardous Energy",
-    "level": "warning"
+    "level": "serious"
   },
   "Lay up": {
     "label": "Lay-up / Drum Twister (LU1)",
@@ -369,7 +390,7 @@
     ],
     "total": 14,
     "top_family": "Material Handling & Lifting",
-    "level": "warning"
+    "level": "serious"
   },
   "Extruder": {
     "label": "Lead Extruder (LE2)",
@@ -397,7 +418,7 @@
     ],
     "total": 14,
     "top_family": "Machinery, Equipment and Hazardous Energy",
-    "level": "warning"
+    "level": "serious"
   },
   "Drawing": {
     "label": "Wire Drawing (WD2 RBD SAMP / WD3 / WD4 / WD5)",
@@ -411,7 +432,7 @@
     ],
     "total": 13,
     "top_family": "Machinery, Equipment and Hazardous Energy",
-    "level": "warning"
+    "level": "serious"
   },
   "Faraday": {
     "label": "Faraday Cage",
@@ -493,7 +514,7 @@
     ],
     "total": 6,
     "top_family": "Vehicles & Traffic Management",
-    "level": "good"
+    "level": "warning"
   },
   "Laboratory": {
     "label": "QC Laboratory",
@@ -530,6 +551,12 @@
   var ZONES = JSON.parse(document.getElementById('zone-data').textContent);
 
   var LEVEL_LABEL = {good:'Standard caution', warning:'Extra caution', serious:'High caution', critical:'Highest caution'};
+  var LEVEL_REASON = {
+    critical: "One of the busiest, most active areas on the production floor — expect regular equipment movement and staff activity throughout your visit.",
+    serious: "An active production area with regular equipment use — not the busiest on site, but still warrants close attention.",
+    warning: "Moderate activity compared to the main production lines — still an operating area, so normal site precautions apply.",
+    good: "A lower-traffic support or utility area — generally quieter, but standard site precautions still apply.",
+  };
 
   var TIPS = {
     'Machinery, Equipment and Hazardous Energy': {icon:'⚙️', title:'Machinery & Moving Parts',
@@ -629,6 +656,7 @@
     var z = ZONES[key];
     panel.appendChild(el('div', {class:'map-panel-title'}, z.label));
     panel.appendChild(el('div', {class:'map-panel-level ' + z.level}, LEVEL_LABEL[z.level]));
+    panel.appendChild(el('div', {class:'map-panel-reason'}, LEVEL_REASON[z.level]));
     var fam = z.top_family;
     var info = TIPS[fam];
     panel.appendChild(el('div', {class:'map-panel-focus'}, 'Main hazard focus'));
