@@ -136,15 +136,44 @@
   .map-panel-family { font-weight: 700; font-size: 14.5px; margin-bottom: 12px; }
   .map-panel-tip { font-size: 13px; color: var(--text-secondary); line-height: 1.6; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
 
-  /* ---------- hazard guide cards ---------- */
-  .guide-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  /* ---------- hazard guide cards (click to expand) ---------- */
+  .guide-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; align-items: start; }
   .guide-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px;
-    box-shadow: var(--shadow); border-top: 4px solid var(--brand-blue);
+    box-shadow: var(--shadow); border-top: 4px solid var(--brand-blue); cursor: pointer;
+    transition: box-shadow .15s ease, border-color .15s ease;
   }
-  .guide-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+  .guide-card:hover { box-shadow: 0 4px 16px -6px rgba(0,147,255,0.35); }
+  .guide-card:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 2px; }
+  .guide-card.is-open { border-color: var(--brand-blue); }
+  .guide-head { display: flex; align-items: flex-start; gap: 10px; }
+  .guide-headtext { flex: 1; min-width: 0; }
+  .guide-icon { font-size: 24px; display: block; line-height: 1; }
   .guide-title { font-weight: 700; font-size: 13.5px; margin-bottom: 6px; }
   .guide-tip { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+  .guide-chevron {
+    font-size: 20px; color: var(--text-muted); flex: none; line-height: 1; margin-top: 2px;
+    transition: transform .2s ease;
+  }
+  .guide-card.is-open .guide-chevron { transform: rotate(90deg); color: var(--brand-blue); }
+  .guide-detail {
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .25s ease, opacity .2s ease, margin-top .25s ease;
+  }
+  .guide-card.is-open .guide-detail { max-height: 400px; opacity: 1; margin-top: 14px; }
+  .guide-detail-block {
+    background: var(--surface-2); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .guide-detail-block:last-child { margin-bottom: 0; }
+  .guide-detail-label {
+    font: 700 10.5px "Archivo", sans-serif; text-transform: uppercase; letter-spacing: .03em;
+    margin-bottom: 4px;
+  }
+  .guide-detail-label.bad { color: var(--serious); }
+  .guide-detail-label.good { color: #0a6b0a; }
+  :root:not([data-theme="light"]) .guide-detail-label.good { color: var(--good); }
+  :root[data-theme="dark"] .guide-detail-label.good { color: var(--good); }
+  .guide-detail-text { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
 
   footer { text-align: center; padding-top: 20px; border-top: 1px solid var(--border); }
   footer p { font-size: 11.5px; color: var(--text-muted); line-height: 1.6; margin: 4px 0; }
@@ -202,7 +231,7 @@
   <section>
     <div class="section-head">
       <h2>Common hazard types on site</h2>
-      <p>A quick guide to what these mean and how to stay safe around them.</p>
+      <p>Tap a card to see what could happen and how to prevent it.</p>
     </div>
     <div class="guide-grid" id="guideGrid"></div>
   </section>
@@ -503,16 +532,46 @@
   var LEVEL_LABEL = {good:'Standard caution', warning:'Extra caution', serious:'High caution', critical:'Highest caution'};
 
   var TIPS = {
-    'Machinery, Equipment and Hazardous Energy': {icon:'⚙️', title:'Machinery & Moving Parts', tip:'Stay behind marked walkways and barriers. Never reach toward or touch moving equipment, even if it looks stopped.'},
-    'Vehicles & Traffic Management': {icon:'🚚', title:'Vehicles & Forklifts', tip:'Watch for reversing forklifts and material transport. Make eye contact with drivers before crossing their path.'},
-    'Tools & Sharp Objects': {icon:'✂️', title:'Tools & Sharp Edges', tip:'Keep hands and clothing clear of cutting tools and blades. Do not handle any tool or equipment yourself.'},
-    'Material Handling & Lifting': {icon:'📦', title:'Lifting & Material Handling', tip:'Stay clear of overhead lifting and suspended loads. Never walk under a crane or hoist in operation.'},
-    'Slip, Trip & Fall': {icon:'⚠️', title:'Slip, Trip & Fall', tip:'Floors may be uneven, wet, or have cable trays underfoot. Watch your step and wear closed, non-slip footwear.'},
-    'Fire, Explosion & Hot Work': {icon:'🔥', title:'Fire & Hot Work', tip:'No open flames or smoking anywhere on site. Be aware of hot surfaces and follow posted warning signage.'},
-    'Ergonomics & Manual Handling': {icon:'🏋️', title:'Manual Handling', tip:'You may see staff performing repetitive or heavy manual tasks — please do not attempt to assist or interact with equipment.'},
-    'Electrical Energy': {icon:'⚡', title:'Electrical Energy', tip:'Stay well clear of electrical panels, cabling, and testing areas. Never touch switches, panels, or cables.'},
-    'Work at Height': {icon:'🪜', title:'Work at Height', tip:'Be aware of overhead work and equipment. A hard hat may be required — follow your escort\'s guidance.'},
-    'Chemical & Hazardous Substances': {icon:'🧪', title:'Chemicals & Substances', tip:'Some areas store or use chemical substances. Follow all posted signage and do not touch containers or equipment.'},
+    'Machinery, Equipment and Hazardous Energy': {icon:'⚙️', title:'Machinery & Moving Parts',
+      tip:'Stay behind marked walkways and barriers. Never reach toward or touch moving equipment, even if it looks stopped.',
+      accident:'Our own records show this is mostly hand and finger injuries — caught between rollers or pinch points, or cut by moving parts. Feet can also be struck by moving components.',
+      prevention:'Keep hands, loose clothing and hair well clear of any moving equipment. Only cross a machine line where a walkway is marked, and only when your escort confirms it\'s safe.'},
+    'Vehicles & Traffic Management': {icon:'🚚', title:'Vehicles & Forklifts',
+      tip:'Watch for reversing forklifts and material transport. Make eye contact with drivers before crossing their path.',
+      accident:'Being struck by a moving forklift or transport vehicle — most of our recorded cases happened at blind corners, during reversing, or while commuting on site.',
+      prevention:'Stay on marked pedestrian routes. Never walk behind a vehicle without confirming the driver has seen you, and never assume a stopped vehicle will stay stopped.'},
+    'Tools & Sharp Objects': {icon:'✂️', title:'Tools & Sharp Edges',
+      tip:'Keep hands and clothing clear of cutting tools and blades. Do not handle any tool or equipment yourself.',
+      accident:'Cuts and open lacerations to the hands and arms — our records show these mostly happen during cutting, trimming or stripping tasks.',
+      prevention:'Never pick up or use a cutting tool, blade or knife on site. If you\'re shown a cutting process, stay at the distance your escort indicates.'},
+    'Material Handling & Lifting': {icon:'📦', title:'Lifting & Material Handling',
+      tip:'Stay clear of overhead lifting and suspended loads. Never walk under a crane or hoist in operation.',
+      accident:'Crush injuries to hands and fingers from rolling drums or bobbins, or impact injuries from a load that shifts or falls.',
+      prevention:'Keep well clear of any area where reels, drums or pallets are being lifted, rolled or moved — the load can shift with little warning.'},
+    'Slip, Trip & Fall': {icon:'⚠️', title:'Slip, Trip & Fall',
+      tip:'Floors may be uneven, wet, or have cable trays underfoot. Watch your step and wear closed, non-slip footwear.',
+      accident:'Slips on wet or oily patches, or trips over cable trays and uneven transitions between areas — can lead to sprains, bruising or a fall.',
+      prevention:'Wear closed, flat, non-slip shoes. Watch the floor immediately ahead of you, especially near process lines and doorways.'},
+    'Fire, Explosion & Hot Work': {icon:'🔥', title:'Fire & Hot Work',
+      tip:'No open flames or smoking anywhere on site. Be aware of hot surfaces and follow posted warning signage.',
+      accident:'Burns from contact with hot surfaces or material, or smoke/heat exposure if a fire starts near hot-work or extrusion activity.',
+      prevention:'No smoking or open flames anywhere on the plant floor. Keep a clear distance from any hot-work, welding or extrusion process you pass.'},
+    'Ergonomics & Manual Handling': {icon:'🏋️', title:'Manual Handling',
+      tip:'You may see staff performing repetitive or heavy manual tasks — please do not attempt to assist or interact with equipment.',
+      accident:'Muscle strain or back injury from repeated lifting, bending or awkward postures — this usually builds up over time rather than from a single event.',
+      prevention:'This risk applies mainly to staff doing the repeated task, not visitors — simply avoid lifting, pushing or helping move anything you see.'},
+    'Electrical Energy': {icon:'⚡', title:'Electrical Energy',
+      tip:'Stay well clear of electrical panels, cabling, and testing areas. Never touch switches, panels, or cables.',
+      accident:'Electrical burns or shock from contact with live equipment, panels, or damaged cabling — our records include burn injuries to hands and face.',
+      prevention:'Never touch any switch, panel, cable or test equipment. Stay outside any area marked as an electrical or high-voltage testing zone.'},
+    'Work at Height': {icon:'🪜', title:'Work at Height',
+      tip:'Be aware of overhead work and equipment. A hard hat may be required — follow your escort\'s guidance.',
+      accident:'Being struck by a falling tool or object from overhead work, or a fall from height for anyone working on a platform or ladder.',
+      prevention:'Look up and stay alert near overhead work. Wear a hard hat where signposted and never walk under a platform or ladder in use.'},
+    'Chemical & Hazardous Substances': {icon:'🧪', title:'Chemicals & Substances',
+      tip:'Some areas store or use chemical substances. Follow all posted signage and do not touch containers or equipment.',
+      accident:'Skin or eye irritation from contact, or respiratory irritation from inhaling fumes or vapours near storage or process areas.',
+      prevention:'Follow all posted chemical-hazard signage. Never touch containers, valves or dispensing equipment, and leave the area if you notice a strong odour.'},
   };
 
   function el(tag, attrs, text){
@@ -583,10 +642,35 @@
     grid.innerHTML = '';
     Object.keys(TIPS).forEach(function(fam){
       var t = TIPS[fam];
-      var card = el('div', {class:'guide-card'});
-      card.appendChild(el('span', {class:'guide-icon'}, t.icon));
-      card.appendChild(el('div', {class:'guide-title'}, t.title));
-      card.appendChild(el('div', {class:'guide-tip'}, t.tip));
+      var card = el('div', {class:'guide-card', tabindex:'0', role:'button', 'aria-expanded':'false'});
+      var head = el('div', {class:'guide-head'});
+      head.appendChild(el('span', {class:'guide-icon'}, t.icon));
+      var htext = el('div', {class:'guide-headtext'});
+      htext.appendChild(el('div', {class:'guide-title'}, t.title));
+      htext.appendChild(el('div', {class:'guide-tip'}, t.tip));
+      head.appendChild(htext);
+      head.appendChild(el('span', {class:'guide-chevron'}, '›'));
+      card.appendChild(head);
+
+      var detail = el('div', {class:'guide-detail'});
+      var d1 = el('div', {class:'guide-detail-block'});
+      d1.appendChild(el('div', {class:'guide-detail-label bad'}, '⚠ What could happen'));
+      d1.appendChild(el('div', {class:'guide-detail-text'}, t.accident));
+      var d2 = el('div', {class:'guide-detail-block'});
+      d2.appendChild(el('div', {class:'guide-detail-label good'}, '✓ How to prevent it'));
+      d2.appendChild(el('div', {class:'guide-detail-text'}, t.prevention));
+      detail.appendChild(d1);
+      detail.appendChild(d2);
+      card.appendChild(detail);
+
+      function toggle(){
+        var open = card.classList.toggle('is-open');
+        card.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      card.addEventListener('click', toggle);
+      card.addEventListener('keydown', function(ev){
+        if (ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); toggle(); }
+      });
       grid.appendChild(card);
     });
   }
